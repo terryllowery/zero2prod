@@ -1,4 +1,5 @@
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use reqwest::Client;
 
 /// Healthcheck handler
 async fn health_check() -> impl Responder {
