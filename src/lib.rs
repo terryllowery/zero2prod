@@ -7,6 +7,8 @@ async fn health_check() -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
+
+
 /// Subscribe to the newsletter
 async fn subscribe() -> HttpResponse {
     HttpResponse::Ok().finish()
