@@ -25,5 +25,5 @@ features = [
     "postgres",
     "uuid",
     "chrono",
-    "migate"
+    "migrate"
     ]
