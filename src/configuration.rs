@@ -1,12 +1,13 @@
 
-
-#[derive(serde::Deserialize)]
+// TODO: Can remove Debug once we are done with development
+#[derive(serde::Deserialize, Debug)]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application_port: u16,
 }
 
-#[derive(serde::Deserialize)]
+// TODO: Can remove Debug once we are done with development
+#[derive(serde::Deserialize, Debug)]
 pub struct DatabaseSettings {
     pub username: String,
     pub password: String,
@@ -18,7 +19,7 @@ pub struct DatabaseSettings {
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     let settings = config::Config::builder()
     .add_source(
-        config::File::new("configuaration.yaml", config::FileFormat::Yaml)
+        config::File::new("conf.yaml", config::FileFormat::Yaml)
     )
     .build()?;
 
