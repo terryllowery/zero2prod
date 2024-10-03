@@ -1,4 +1,3 @@
-use sqlx::{PgConnection, Connection};
 use zero2prod::configuration::get_configuration;
 use zero2prod::startup::run;
 use sqlx::PgPool;

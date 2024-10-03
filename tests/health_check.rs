@@ -1,9 +1,8 @@
 //! tests/health_check.rs
 use std::net::TcpListener;
-use reqwest::Client;
 use zero2prod::startup::run;
-use sqlx::PgPool;
-use zero2prod::configuration::get_configuration;
+use sqlx::{PgPool, PgConnection, Connection, Executor};
+use zero2prod::configuration::{get_configuration, DatabaseSettings};
 
 pub struct TestApp {
     pub address: String,
@@ -35,10 +34,6 @@ async fn health_check_works() {
 async fn subscribe_returns_a_200_for_valid_form_data() {
     // Arrange
     let app = spawn_app().await;
-    let client = reqwest::Client::new();
-
-
-
     let client = reqwest::Client::new();
 
     // Act
@@ -100,13 +95,10 @@ async fn spawn_app() -> TestApp {
     let port = listner.local_addr().unwrap().port().to_string();
     let address = format!("http://127.0.0.1:{}", port);
 
-    let config = get_configuration().expect("Failed to read configuration.");
+    let mut config = get_configuration().expect("Failed to read configuration.");
+    config.database.database_name = uuid::Uuid::new_v4().to_string();
 
-    let connection_pool = PgPool::connect(
-        &config.database.connection_string()
-    )
-    .await
-    .expect("Failed to connect to Postgres.");
+    let connection_pool = configure_database(&config.database).await;
 
     let server = run(listner, connection_pool.clone()).expect("Failed to bind address");
     let _ = tokio::spawn(server);
@@ -115,3 +107,39 @@ async fn spawn_app() -> TestApp {
         db_pool: connection_pool
     }
 }
+
+/// Setup the test database
+async fn configure_database(config: &DatabaseSettings) -> PgPool {
+
+    // Create DB
+    let mut connection = PgConnection::connect(
+        &config.connection_string_without_db()
+    )
+    .await
+    .expect("Failed to connect to Postgres.");
+
+
+    connection
+    .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+    .await
+    .expect("Failed to create database.");
+
+    // Migrate DB
+    let connection_pool = PgPool::connect(
+        &config.connection_string()
+    )
+    .await
+    .expect("Failed to connect to Postgres.");
+
+    sqlx::migrate!("./migrations")
+    .run(&connection_pool)
+    .await
+    .expect("Failed to migrate the database.");
+
+    connection_pool
+
+    
+
+}
+
+// TODO: Clean up the database after the test run
