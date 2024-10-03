@@ -1,5 +1,5 @@
 use actix_web::{web, HttpResponse};
-use sqlx::PgConnection;
+use sqlx::PgPool;
 use uuid::Uuid;
 use chrono::Utc;
 
@@ -9,9 +9,8 @@ pub struct FormData {
     name: String,
 }
 /// Subscribe to the newsletter
-pub(crate) async fn subscribe(form: web::Form<FormData>, connection: web::Data<PgConnection>) -> HttpResponse {
-    // TODO: Fix this using pgPool
-    sqlx::query!(
+pub(crate) async fn subscribe(form: web::Form<FormData>, connection: web::Data<PgPool>) -> HttpResponse {
+   match sqlx::query!(
         r#"
         INSERT INTO subscriptions (id , email, name, created_at)
         VALUES ($1, $2, $3, $4)
@@ -22,6 +21,14 @@ pub(crate) async fn subscribe(form: web::Form<FormData>, connection: web::Data<P
         Utc::now()
     )
     .execute(connection.as_ref())
-    .await;
-    HttpResponse::Ok().finish()
+    .await {
+        Ok(_) => {
+            HttpResponse::Ok().finish()
+        },
+        Err(e) => {
+            eprintln!("Failed to execute query: {:?}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+
 }
