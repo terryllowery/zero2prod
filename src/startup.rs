@@ -3,6 +3,7 @@ use actix_web::{web, App, HttpServer};
 use actix_web::dev::Server;
 use sqlx::PgPool;
 
+// TODO: Wrap this two into one use statement
 use crate::routes::health_check::health_check;
 use crate::routes::subscriptions::subscribe;
 
