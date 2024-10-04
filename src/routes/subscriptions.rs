@@ -19,6 +19,7 @@ pub(crate) async fn subscribe(form: web::Form<FormData>, connection: web::Data<P
         subscriber_name = %form.name
     );
     let _request_span_guard = request_span.enter();
+    // TODO: remove commented code
     // tracing::info!(
     //     "request_id: {} - Adding '{}' '{}' as a new subscriber.",
     //     request_id,
