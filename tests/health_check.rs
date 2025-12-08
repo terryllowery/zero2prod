@@ -1,13 +1,22 @@
 use std::net::TcpListener;
-
+/// Spin up instance of our application
+/// and returns it's address
+fn spawn_app() -> String {
+    let listener = TcpListener::bind("127.0.0.1:0")
+        .expect("Failed to create TCP listener");
+    let port = listener.local_addr().unwrap().port();
+    let server = zero2prod::run(listener).expect("Failed to start server");
+    let _ = tokio::spawn(server);
+    format!("http://localhost:{}", port)
+}
 #[tokio::test]
 async fn health_check_works() {
-    let address = spawn_app();
+    let app_address = spawn_app();
 
     let client = reqwest::Client::new();
 
     let response = client
-        .get(address)
+        .get(&format!("{}/health_check", app_address))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -67,11 +76,4 @@ async fn subscribe_returns_a_400_when_data_is_missing() {
 }
 
 
-fn spawn_app() -> String {
-    let listener = TcpListener::bind("127.0.0.1:0")
-        .expect("Failed to create TCP listener");
-    let port = listener.local_addr().unwrap().port();
-    let server = zero2prod::run(listener).expect("Failed to start server");
-    let _ = tokio::spawn(server);
-    format!("http://localhost:{}/health_check", port)
-}
+
