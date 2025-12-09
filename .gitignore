@@ -1,4 +1,3 @@
 /target
 *.rest
-.env
 .idea
