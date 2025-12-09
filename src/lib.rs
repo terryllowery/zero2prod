@@ -1,10 +1,8 @@
-use actix_web::{web, App, HttpResponse, HttpServer};
+use actix_web::{App, HttpResponse, HttpServer, web};
 
-use std::net::TcpListener;
 use serde::Deserialize;
+use std::net::TcpListener;
 
-pub mod routes;
 pub mod configuration;
+pub mod routes;
 pub mod startup;
-
-

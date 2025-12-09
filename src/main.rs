@@ -1,7 +1,7 @@
 use std::fmt::format;
-use zero2prod::startup::run;
 use std::net::TcpListener;
 use zero2prod::configuration::get_configuration;
+use zero2prod::startup::run;
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     let _configuration = get_configuration().expect("Failed to read configuration.");

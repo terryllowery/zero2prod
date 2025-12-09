@@ -1,12 +1,11 @@
-use std::net::TcpListener;
-use sqlx::{PgConnection, Connection};
 use sqlx::types::uuid;
+use sqlx::{Connection, PgConnection};
+use std::net::TcpListener;
 
 /// Spin up instance of our application
 /// and returns it's address
 fn spawn_app() -> String {
-    let listener = TcpListener::bind("127.0.0.1:0")
-        .expect("Failed to create TCP listener");
+    let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to create TCP listener");
     let port = listener.local_addr().unwrap().port();
     let server = zero2prod::startup::run(listener).expect("Failed to start server");
     let _ = tokio::spawn(server);
@@ -31,8 +30,8 @@ async fn health_check_works() {
 #[tokio::test]
 async fn subscribe_returns_a_200_for_valid_form_data() {
     // Arrange
-    let configuration = zero2prod::configuration::get_configuration()
-        .expect("Failed to read configuration.");
+    let configuration =
+        zero2prod::configuration::get_configuration().expect("Failed to read configuration.");
     let connection_string = configuration.database.connection_string();
     let mut connection = PgConnection::connect(&connection_string)
         .await
@@ -43,7 +42,8 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 
     // Act
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
-    let response = client.post(&format!("{}/subscriptions", &app_address))
+    let response = client
+        .post(&format!("{}/subscriptions", &app_address))
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(body)
         .send()
@@ -53,13 +53,13 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
     // Assert
     assert_eq!(200, response.status().as_u16());
 
-    
-
-    let saved = sqlx::query!("SELECT email, name FROM subscriptions WHERE email = $1 ",
-    "ursula_le_quin@gmail.com")
-        .fetch_one(&mut connection)
-        .await
-        .expect("Failed to fetch saved subscription.");
+    let saved = sqlx::query!(
+        "SELECT email, name FROM subscriptions WHERE email = $1 ",
+        "ursula_le_quin@gmail.com"
+    )
+    .fetch_one(&mut connection)
+    .await
+    .expect("Failed to fetch saved subscription.");
 
     assert_eq!(saved.email, "ursula_le_quin@gmail.com");
     assert_eq!(saved.name, "le guin");
@@ -74,12 +74,13 @@ async fn subscribe_returns_a_400_when_data_is_missing() {
     let test_cases = vec![
         ("name=le%20guin", "missing the email"),
         ("email=ursula_le_quin%40gmail.com", "missing the name"),
-        ("", "missing both name and email")
+        ("", "missing both name and email"),
     ];
 
     // Act
     for (invalid_body, error_message) in test_cases {
-        let response = client.post(&format!("{}/subscriptions", &app_address))
+        let response = client
+            .post(&format!("{}/subscriptions", &app_address))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(invalid_body)
             .send()
@@ -95,6 +96,3 @@ async fn subscribe_returns_a_400_when_data_is_missing() {
         );
     }
 }
-
-
-
