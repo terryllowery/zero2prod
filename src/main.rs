@@ -1,4 +1,3 @@
-use std::fmt::format;
 use std::net::TcpListener;
 use zero2prod::configuration::get_configuration;
 use zero2prod::startup::run;
