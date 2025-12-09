@@ -7,6 +7,7 @@ pub struct FormData {
     pub email: String,
 }
 
-pub async fn subscribe(form: web::Form<FormData>) -> HttpResponse {
+// TODO: implement actual subscription logic
+pub async fn subscribe(_form: web::Form<FormData>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }

@@ -1,4 +1,3 @@
-use sqlx::types::uuid;
 use sqlx::{Connection, PgConnection};
 use std::net::TcpListener;
 
