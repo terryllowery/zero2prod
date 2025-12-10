@@ -1,18 +1,29 @@
+use sqlx::PgPool;
 use sqlx::{Connection, PgConnection};
 use std::net::TcpListener;
 
+async fn db_connect() -> PgPool {
+    let _configuration =
+        zero2prod::configuration::get_configuration().expect("Failed to read configuration.");
+    let db_connection = PgPool::connect(&_configuration.database.connection_string())
+        .await
+        .expect("Failed to connect to the database.");
+    db_connection
+}
+
 /// Spin up instance of our application
 /// and returns it's address
-fn spawn_app() -> String {
+fn spawn_app(db_connection: PgPool) -> String {
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to create TCP listener");
     let port = listener.local_addr().unwrap().port();
-    let server = zero2prod::startup::run(listener).expect("Failed to start server");
+
+    let server = zero2prod::startup::run(listener, db_connection).expect("Failed to start server");
     let _ = tokio::spawn(server);
     format!("http://localhost:{}", port)
 }
 #[tokio::test]
 async fn health_check_works() {
-    let app_address = spawn_app();
+    let app_address = spawn_app(db_connect().await);
 
     let client = reqwest::Client::new();
 
@@ -32,11 +43,11 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
     let configuration =
         zero2prod::configuration::get_configuration().expect("Failed to read configuration.");
     let connection_string = configuration.database.connection_string();
-    let mut connection = PgConnection::connect(&connection_string)
+    let mut connection = PgPool::connect(&connection_string)
         .await
         .expect("Failed to connect to Postgres.");
 
-    let app_address = spawn_app();
+    let app_address = spawn_app(db_connect().await);
     let client = reqwest::Client::new();
 
     // Act
@@ -67,7 +78,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 #[tokio::test]
 async fn subscribe_returns_a_400_when_data_is_missing() {
     // Arrange
-    let app_address = spawn_app();
+    let app_address = spawn_app(db_connect().await);
     let client = reqwest::Client::new();
 
     let test_cases = vec![
